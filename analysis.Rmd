@@ -1,0 +1,374 @@
+---
+title: "FSU-KNU Hackathon Analysis"
+author: "Bret Staudt Willet"
+date: "2024-12-05"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+**Published output:** https://rpubs.com/bretsw/hackathon-fsu-knu-2024
+
+**Source code:** https://github.com/bretsw/hackathon-fsu-knu-2024
+
+```{r setup, message=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+```{r, message=FALSE, include=FALSE}
+df <- 
+  read_csv("FSU KNU hackathon - Fall 2024.csv") %>% 
+  rename(
+    participant_id = "Response ID",
+    country = "Country",
+    team = "Which team were you on? (Please enter your team name.)",
+    hackathon_xp = "Not counting this event, how many times have you previously participated in hackathons or similar events? - 1",
+    international_xp = "Have you participated previously in international group projects?",
+    fav_programming = "What is your favorite programming language/stack? - Selected Choice",
+    event_organization = "How well was this event organized?",
+    event_satisfaction = "How satisfied are you with this event?",
+    sdl_goals = "Please rate the degree to which you agree with the following statements about your participation in the event: - I set goals for myself while problem-solving during the event.",
+    sdl_evaluation = "Please rate the degree to which you agree with the following statements about your participation in the event: - I took time to evaluate my progress toward those goals.",
+    sdl_outside_sources = "Please rate the degree to which you agree with the following statements about your participation in the event: - I sought new information, resources, knowledge during the event.",
+    sdl_practice = "Please rate the degree to which you agree with the following statements about your participation in the event: - I practiced new skills during the event.",
+    sdl_satisfaction = "Please rate the degree to which you agree with the following statements about your participation in the event: - I am happy with my problem-solving processes during the event.",
+    intercultural_skills = "Please rate the degree to which you agree with the following statements about your participation in the event: - I developed my intercultural communication skills during this event.",
+    intercultural_knowledge = "Please rate the degree to which you agree with the following statements about your participation in the event: - I learned new information about a foreign country and culture through this event.",
+    intercultural_comfortability = "Please rate the degree to which you agree with the following statements about your participation in the event: - I feel comfortable working in international and multicultural group projects after this event.",
+    support_past_knowledge = "Please rate the importance of the following supports for problem-solving during this event: - Past knowledge and existing skills",
+    support_event_teammates = "Please rate the importance of the following supports for problem-solving during this event: - Event teammates",
+    support_event_experts = "Please rate the importance of the following supports for problem-solving during this event: - Event experts",
+    support_outside_friends = "Please rate the importance of the following supports for problem-solving during this event: - Friends and colleagues not participating in the event",
+    support_social_media = "Please rate the importance of the following supports for problem-solving during this event: - Social media and web forums",
+    support_books = "Please rate the importance of the following supports for problem-solving during this event: - Textbooks, guidebooks, manuals, etc.",
+    support_ai = "Please rate the importance of the following supports for problem-solving during this event: - Generative AI tools (e.g., ChatGPT, Copilot, Gemini, Claude, etc.)",
+    helpfulness_event_experts = "How helpful were the event experts?",
+    career_forward = "Are you ready to move forward in your career?",
+    career_preparedness = "Please rate, with 1 being not at all prepared and 10 being completely prepared, the degree to which you feel ready to move forward in your career because of this event: - 1",
+    future_involvement = "Would you be interested in participating in a future international event like this (e.g., hackathon, design sprint)?",
+    description_overall = "Briefly describe your overall impressions of this event:",
+    description_learning = "Briefly describe two or more new things you learned about your international partners through this binational event."
+  ) %>%
+  mutate(participant = row_number()) %>%
+  select(participant, everything())
+```
+
+
+```{r, include=FALSE, eval=FALSE}
+names(df)
+```
+
+
+```{r, include=FALSE}
+df_longer <-
+  df %>%
+  pivot_longer(
+    cols = starts_with("sdl"),
+    names_to = "sdl_category",
+    values_to = "sdl_rating"
+  ) %>%
+  pivot_longer(
+    cols = starts_with("support"),
+    names_to = "support_category",
+    values_to = "support_rating"
+  ) %>%
+  pivot_longer(
+    cols = starts_with("intercultural"),
+    names_to = "intercultural_category",
+    values_to = "intercultural_rating"
+  ) %>%
+  mutate(
+    sdl_factor = factor(sdl_rating),
+    support_factor = factor(support_rating),
+    intercultural_factor = factor(intercultural_rating)
+  )
+```
+
+
+```{r, include=FALSE, eval=FALSE}
+glimpse(df_longer)
+```
+
+
+---
+
+## Self-Directed Learning
+
+### Please rate the degree to which you agree with the following statements about your participation in the event:
+
+```{r, include=FALSE}
+df_sdl_category <-
+  df_longer %>%
+  distinct(participant, sdl_category, .keep_all = TRUE) %>% 
+  mutate(sdl_category = 
+           str_replace_all(sdl_category, 
+                           c("sdl_goals" = "I set goals for myself while problem-solving during the event.",
+                             "sdl_evaluation" = "I took time to evaluate my progress toward those goals.",
+                             "sdl_outside_sources" = "I sought new information, resources, knowledge during the event.",
+                             "sdl_practice" = "I practiced new skills during the event.",
+                             "sdl_satisfaction" = "I am happy with my problem-solving processes during the event."
+                           )
+           )
+  )
+```
+
+```{r, echo=FALSE}
+df_sdl_category %>% 
+  group_by(sdl_category) %>%
+  summarize(sdl_mean = mean(sdl_rating, na.rm = TRUE)) %>%
+  arrange(desc(sdl_mean)) %>%
+  mutate(sdl_mean = round(sdl_mean, 3)) %>%
+  rename("Self-Directed Learning Enactment" = sdl_category,
+         "Mean Score (1-10)" = sdl_mean)
+```
+
+```{r, echo=FALSE, out.width="100%"}
+df_sdl_category %>%
+  ggplot(aes(x = sdl_category, fill = sdl_factor)) +
+  geom_bar() +
+  labs(title = "Self-Directed Learning Enactment",
+       x = NULL,
+       y = "Count") +
+  coord_flip() +
+  theme_bw()  +
+  theme(axis.text.y = element_text(angle = 15))
+```
+
+
+### Please rate the importance of the following supports for problem-solving during this event:
+
+```{r, include=FALSE}
+df_sdl_support <-
+  df_longer %>%
+  distinct(participant, support_category, .keep_all = TRUE) %>% 
+  mutate(support_category = 
+           str_replace_all(support_category, 
+                           c("support_past_knowledge" = "Past knowledge and existing skills",
+                             "support_event_teammates" = "Event teammates",
+                             "support_event_experts" = "Event experts",
+                             "support_outside_friends" = "Friends and colleagues not participating in the event",
+                             "support_social_media" = "Social media and web forums",
+                             "support_books" = "Textbooks, guidebooks, manuals, etc.",
+                             "support_ai" = "Generative AI tools (e.g., ChatGPT, Copilot, Gemini, Claude, etc.)"
+                           )
+           )
+  )
+```
+
+```{r, echo=FALSE}
+df_sdl_support %>%
+  group_by(support_category) %>%
+  summarize(support_mean = mean(support_rating, na.rm = TRUE)) %>%
+  arrange(desc(support_mean)) %>%
+  mutate(support_mean = round(support_mean, 3)) %>%
+  rename("Importance of Self-Directed Learning Supports" = support_category,
+         "Mean Score (1-10)" = support_mean)
+```
+
+```{r, echo=FALSE, out.width="100%"}
+df_sdl_support %>%
+  ggplot(aes(x = support_category, fill = support_factor)) +
+  geom_bar() +
+  labs(title = "Self-Directed Learning Supports",
+       x = "",
+       y = "Count") +
+  coord_flip() +
+  theme_bw() +
+  theme(axis.text.y = element_text(angle = 15))
+```
+
+
+
+---
+
+## Intercultural Experience
+
+### Please rate the degree to which you agree with the following statements about your participation in the event:
+
+```{r, include=FALSE}
+df_intercultural <-
+  df_longer %>%
+  distinct(participant, intercultural_category, .keep_all = TRUE) %>% 
+  mutate(intercultural_category = 
+           str_replace_all(intercultural_category, 
+                           c("intercultural_skills" = "I developed my intercultural communication skills.",
+                             "intercultural_knowledge" = "I learned new information about a foreign country and culture.",
+                             "intercultural_comfortability" = "I feel comfortable working in international and multicultural group projects."
+                           )
+           )
+  )
+```
+
+```{r, echo=FALSE}
+df_intercultural %>%
+  group_by(intercultural_category) %>%
+  summarize(intercultural_mean = mean(intercultural_rating, na.rm = TRUE)) %>%
+  arrange(desc(intercultural_mean)) %>%
+  mutate(intercultural_mean = round(intercultural_mean, 3)) %>%
+  rename("Intercultural Experience" = intercultural_category,
+         "Mean Score (1-10)" = intercultural_mean)
+```
+
+```{r, echo=FALSE, out.width="100%"}
+df_intercultural %>%
+  ggplot(aes(x = intercultural_category, fill = intercultural_factor)) +
+  geom_bar() +
+  labs(title = "Intercultural Experience",
+       x = "",
+       y = "Count") +
+  coord_flip() +
+  theme_bw()  +
+  theme(axis.text.y = element_text(angle = 15))
+```
+
+
+
+---
+
+## Event Evaluation
+
+### How satisfied are you with this event?
+
+```{r, echo=FALSE}
+df %>%
+  mutate(event_satisfaction = 
+           factor(event_satisfaction, 
+                  levels = c("Absolutely pleased. When will the next one be?", 
+                             "Satisfied", 
+                             "Dissatisfied"
+                  )
+           )
+  ) %>%
+  count(event_satisfaction) %>%
+  rename("Satisfaction with Event" = event_satisfaction,
+         "Number of Responses" = n)
+```
+
+
+### How well was this event organized?
+
+```{r, echo=FALSE}
+df %>%
+  mutate(event_organization = factor(event_organization, 
+                                     levels = c("Perfectly", "Good", "Not bad", "Badly", "Terribly"))
+         ) %>%
+  count(event_organization) %>%
+  bind_rows(
+    tibble(
+      event_organization = "Terribly",
+      n = 0
+    )
+  ) %>%
+  rename("Organization of Event" = event_organization,
+         "Number of Responses" = n)
+```
+
+
+### How helpful were the event experts?
+
+```{r, echo=FALSE}
+df %>%
+  mutate(helpfulness_event_experts = 
+           factor(helpfulness_event_experts, 
+                  levels = c("Super helpful", 
+                             "Useful", 
+                             "Enough",
+                             "Did not help",
+                             "I did not follow their recommendations",
+                             "I am an expert"
+                  )
+           )
+  ) %>%
+  count(helpfulness_event_experts) %>%
+  bind_rows(
+    tibble(
+      helpfulness_event_experts = 
+        c("Did not help", 
+          "I did not follow their recommendations",
+          "I am an expert"
+        ), 
+      n = c(0, 0, 0)
+    )
+  ) %>%
+  filter(!is.na(helpfulness_event_experts)) %>%
+  rename("Helpfulness of Experts" = helpfulness_event_experts,
+         "Number of Responses" = n)
+```
+
+
+### Are you ready to move forward in your career?
+
+```{r, echo=FALSE}
+df %>%
+  count(future_involvement) %>%
+  rename("Ready to Move Forward" = future_involvement,
+         "Number of Responses" = n)
+```
+
+
+### Please rate, with 1 being not at all prepared and 10 being completely prepared, the degree to which you feel ready to move forward in your career because of this event: 
+
+```{r, echo=FALSE}
+df %>%
+  count(career_preparedness) %>%
+  bind_rows(
+    tibble(
+      career_preparedness = c(2, 5),
+      n = c(0, 0)
+    )
+  ) %>%
+  arrange(career_preparedness) %>%
+  rename("Readiness to Move Forward" = career_preparedness,
+         "Number of Responses" = n)
+```
+
+
+
+---
+
+## Participant Background
+
+### Not counting this event, how many times have you previously participated in hackathons or similar events? 
+
+```{r, echo=FALSE}
+df %>%
+  count(hackathon_xp) %>%
+  bind_rows(
+    tibble(
+      hackathon_xp = c(2, 4, 7, 8 , 9, 10),
+      n = c(0, 0, 0, 0, 0, 0)
+    )
+  ) %>%
+  arrange(hackathon_xp) %>%
+  rename("Number of Past Hackathons" = hackathon_xp,
+         "Number of Responses" = n)
+```
+
+
+### Have you participated previously in international group projects?
+
+```{r, echo=FALSE}
+df %>%
+  count(international_xp) %>%
+  rename("Past International Group Projects" = international_xp,
+         "Number of Responses" = n)
+```
+
+
+### What is your favorite programming language/stack?
+
+```{r, echo=FALSE}
+df %>%
+  count(fav_programming) %>%
+  bind_rows(
+    tibble(
+      fav_programming = c("R", "PHP"), 
+      n = c(0, 0)
+    )
+  ) %>%
+  arrange(desc(n)) %>%
+  rename("Favorite Programming Language" = fav_programming,
+         "Number of Responses" = n)
+```
