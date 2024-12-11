@@ -7,15 +7,16 @@ output:
   pdf_document: default
 ---
 
-**Published output:** https://rpubs.com/bretsw/hackathon-fsu-knu-2024
+**Published output:** https://rpubs.com/bretsw/hackathon-fsu-knu-2024/
 
-**Source code:** https://github.com/bretsw/hackathon-fsu-knu-2024
+**Source code:** https://github.com/bretsw/hackathon-fsu-knu-2024/
 
 
 
 ```{r setup, message=FALSE, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(viridis)
 ```
 
 
@@ -130,6 +131,7 @@ df_sdl_category %>%
 df_sdl_category %>%
   ggplot(aes(x = sdl_category, fill = sdl_factor)) +
   geom_bar() +
+  scale_fill_viridis(discrete = TRUE, option = "mako") +
   labs(title = "Self-Directed Learning Enactment",
        x = NULL,
        y = "Count") +
@@ -138,6 +140,13 @@ df_sdl_category %>%
   theme(axis.text.y = element_text(angle = 15))
 ```
 
+```{r, include=FALSE, eval=FALSE}
+ggsave(file="output/sdl-enactment.png", width=8, height=4.5)
+```
+
+
+
+---
 
 ### Please rate the importance of the following supports for problem-solving during this event:
 
@@ -173,12 +182,17 @@ df_sdl_support %>%
 df_sdl_support %>%
   ggplot(aes(x = support_category, fill = support_factor)) +
   geom_bar() +
+  scale_fill_viridis(discrete = TRUE, option = "mako") +
   labs(title = "Self-Directed Learning Supports",
        x = "",
        y = "Count") +
   coord_flip() +
   theme_bw() +
   theme(axis.text.y = element_text(angle = 15))
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggsave(file="output/sdl-supports.png", width=8, height=4.5)
 ```
 
 
@@ -217,12 +231,17 @@ df_intercultural %>%
 df_intercultural %>%
   ggplot(aes(x = intercultural_category, fill = intercultural_factor)) +
   geom_bar() +
+  scale_fill_viridis(discrete = TRUE, option = "mako") +
   labs(title = "Intercultural Experience",
        x = "",
        y = "Count") +
   coord_flip() +
   theme_bw()  +
   theme(axis.text.y = element_text(angle = 15))
+```
+
+```{r, include=FALSE, eval=FALSE}
+ggsave(file="output/intercultural-experience.png", width=8, height=4.5)
 ```
 
 
